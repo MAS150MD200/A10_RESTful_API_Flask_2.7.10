@@ -1,6 +1,6 @@
 __author__ = 'atsvetkov'
 
-#test
+# TODO: put "c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)" in separate function.
 
 import sys
 sys.path.append('./acos_client/')
@@ -53,12 +53,45 @@ def get_service_groups():
 
 @app.route('/a10-slb/api/v1.0/service-groups/<service_group_name>', methods=['GET'])
 @auth.login_required
-def get_service_group(service_group_name):
+def get_service_group_member(service_group_name):
     c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
     all_service_groups = c.slb.service_group.all()
     srv_grp = parse_all_service_groups(all_service_groups, service_group_name)
     return jsonify(srv_grp)
 
+
+@app.route('/a10-slb/api/v1.0/service-groups/<service_group_name>/<server_name>:<server_port>', methods=['DELETE'])
+@auth.login_required
+def delete_service_group_server(service_group_name, server_name, server_port):
+    c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
+
+    # debug:
+    command = "c.slb.service_group.member.delete({0}, {1}, {2})".format(service_group_name,
+                                                                        server_name,
+                                                                        server_port)
+
+    delete_result = c.slb.service_group.member.delete(service_group_name, server_name, server_port)
+    # delete_result = eval(command)
+    # delete_result = "pass"
+    return jsonify({"command": command,
+                    "response": delete_result})
+
+
+@app.route('/a10-slb/api/v1.0/service-groups/<service_group_name>/<server_name>:<server_port>', methods=['POST'])
+@auth.login_required
+def create_service_group_server(service_group_name, server_name, server_port):
+    c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
+
+    # debug:
+    command = "c.slb.service_group.member.create({0}, {1}, {2})".format(service_group_name,
+                                                                        server_name,
+                                                                        server_port)
+
+    create_result = c.slb.service_group.member.create(service_group_name,server_name,server_port)
+    # create_result = eval(command)
+    # create_result = "pass"
+    return jsonify({"command": command,
+                    "response": create_result})
 
 
 """
