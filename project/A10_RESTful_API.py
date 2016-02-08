@@ -1,6 +1,9 @@
 __author__ = 'atsvetkov'
 
 # TODO: put "c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)" in separate function.
+# TODO: show server status (enable/disable).
+# TODO: show current command.
+
 
 import sys
 sys.path.append('./acos_client/')
@@ -41,6 +44,16 @@ def parse_all_service_groups(srv_grp_dict, srv_grp_name=None):
             return {srv_grp["name"]:srv_grp["member_list"]}
         srv_grp_result[srv_grp["name"]] = srv_grp["member_list"]
     return srv_grp_result if not srv_grp_name else abort(404)
+
+
+def find_server(server_name):
+    c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
+    server = None
+    try:
+        server = c.slb.server.get(server_name)
+    except Exception:
+        abort(404)
+    return server
 
 
 @app.route('/a10-slb/api/v1.0/service-groups', methods=['GET'])
@@ -92,6 +105,37 @@ def create_service_group_server(service_group_name, server_name, server_port):
     # create_result = "pass"
     return jsonify({"command": command,
                     "response": create_result})
+
+
+@app.route('/a10-slb/api/v1.0/server/<server_name>', methods=['GET'])
+@auth.login_required
+def server_info(server_name):
+    server = find_server(server_name)
+
+    return jsonify(server)
+
+
+@app.route('/a10-slb/api/v1.0/server/<server_name>/status', methods=['GET'])
+@auth.login_required
+def get_server_status(server_name):
+    server = find_server(server_name)
+
+    return jsonify({"status": server["server"]["status"]})
+
+
+# @app.route('/a10-slb/api/v1.0/server/<server_name>/status/<status>', methods=['PUT'])
+# @auth.login_required
+# def server_status(server_name):
+#     c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
+#
+#     try:
+#         server = c.slb.server.update(server_name, )
+#     except Exception:
+#         abort(404)
+#
+#     # return jsonify({"status": server["server"]["status"],
+#     return jsonify({"status": server})
+
 
 
 """
