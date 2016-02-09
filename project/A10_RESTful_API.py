@@ -3,6 +3,7 @@ __author__ = 'atsvetkov'
 # TODO: put "c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)" in separate function.
 # TODO: show server status (enable/disable).
 # TODO: show current command.
+# TODO: show current command status.
 
 
 import sys
@@ -84,8 +85,6 @@ def delete_service_group_server(service_group_name, server_name, server_port):
                                                                         server_port)
 
     delete_result = c.slb.service_group.member.delete(service_group_name, server_name, server_port)
-    # delete_result = eval(command)
-    # delete_result = "pass"
     return jsonify({"command": command,
                     "response": delete_result})
 
@@ -111,7 +110,6 @@ def create_service_group_server(service_group_name, server_name, server_port):
 @auth.login_required
 def server_info(server_name):
     server = find_server(server_name)
-
     return jsonify(server)
 
 
@@ -119,22 +117,27 @@ def server_info(server_name):
 @auth.login_required
 def get_server_status(server_name):
     server = find_server(server_name)
-
     return jsonify({"status": server["server"]["status"]})
 
 
-# @app.route('/a10-slb/api/v1.0/server/<server_name>/status/<status>', methods=['PUT'])
-# @auth.login_required
-# def server_status(server_name):
-#     c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
-#
-#     try:
-#         server = c.slb.server.update(server_name, )
-#     except Exception:
-#         abort(404)
-#
-#     # return jsonify({"status": server["server"]["status"],
-#     return jsonify({"status": server})
+@app.route('/a10-slb/api/v1.0/server/<server_name>/status/<int:new_status>', methods=['PUT'])
+@auth.login_required
+def set_server_status(server_name, new_status):
+    # TODO: check if multiple servers with same name and different ip.
+
+    if new_status not in [0, 1]:
+        abort(404)
+
+    server = find_server(server_name)
+    server_host = server["server"]["host"]
+
+    # TODO: try to move "c = ..." into main. And call "c = ..." only once.
+    c = acos.Client(a10_ip, acos.AXAPI_21, a10_username, a10_password)
+    set_status = c.slb.server.update(server_name, server_host, status=new_status)
+
+    return c.http.response_data
+
+
 
 
 
@@ -198,4 +201,5 @@ def delete_task(task_id):
 
 
 if __name__ == '__main__':
+
     app.run(debug=True)

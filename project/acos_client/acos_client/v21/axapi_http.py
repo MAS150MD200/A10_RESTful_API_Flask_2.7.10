@@ -117,6 +117,7 @@ class HttpClient(object):
         self.port = port
         self.protocol = protocol
         self.timeout = timeout
+        self.response_data = None   # MOE.
         if port is None:
             if protocol is 'http':
                 self.port = 80
@@ -200,6 +201,7 @@ class HttpClient(object):
         if last_e is not None:
             raise e
 
+        self.response_data = data   # MOE.
         LOG.debug("axapi_http: data = %s", data)
 
         # Fixup some broken stuff in an earlier version of the axapi
