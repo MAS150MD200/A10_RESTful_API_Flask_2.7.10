@@ -1,6 +1,11 @@
 __author__ = 'atsvetkov'
 
 # TODO: show current command.
+# TODO: Add logging.
+# TODO: Write configuration.
+# TODO: Backup SLB config to TFTP.
+# TODO: Message to HipChat.
+# TODO: Alert if we try to remove more than half servers from cluster.
 
 import sys
 sys.path.append('./acos_client/')
