@@ -45,23 +45,30 @@ def acos_open_session(slb):
     return c
 
 
-def parse_all_service_groups(srv_grp_dict, srv_grp_name=None):
+def parse_all_service_groups(srv_grp_dict, srv_grp_name=None, c=None):
     srv_grp_result = {}
+    member_server_result = []
     for srv_grp in srv_grp_dict["service_group_list"]:
         if srv_grp_name and srv_grp["name"] == srv_grp_name:
-            return {srv_grp["name"]:srv_grp["member_list"]}
+            for member_server in srv_grp["member_list"]:
+                # get status of the real server:
+                member_server_status = find_server(member_server["server"], c)["server"]["status"]
+                member_server_result.append({"server": member_server["server"],
+                                             "port": member_server["port"],
+                                             "member status": member_server["status"],
+                                             "server_status": member_server_status})
+            return {srv_grp["name"]: member_server_result}
         srv_grp_result[srv_grp["name"]] = srv_grp["member_list"]
     return srv_grp_result if not srv_grp_name else abort(404)
 
 
-def find_server(slb, server_name):
+def find_server(server_name, session):
     server = None
-    c = acos_open_session(slb)
+    c = session
     try:
         server = c.slb.server.get(server_name)
     except Exception:
         abort(404)
-    c.session.close()
     return server
 
 
@@ -81,9 +88,10 @@ def get_service_groups(slb):
 def get_service_group_member(slb, service_group_name):
     c = acos_open_session(slb)
     all_service_groups = c.slb.service_group.all()
+
+    srv_grp = parse_all_service_groups(all_service_groups, service_group_name, c)
     c.session.close()
 
-    srv_grp = parse_all_service_groups(all_service_groups, service_group_name)
     return jsonify(srv_grp)
 
 
@@ -110,7 +118,9 @@ def create_service_group_member(slb, service_group_name, server_name, server_por
 @app.route('/a10-slb/api/v1.0/<slb>/server/<server_name>', methods=['GET'])
 # @auth.login_required
 def server_info(slb, server_name):
-    server = find_server(slb, server_name)
+    c = acos_open_session(slb)
+    server = find_server(server_name, c)
+    c.session.close()
 
     return jsonify(server)
 
@@ -119,7 +129,9 @@ def server_info(slb, server_name):
 # @auth.login_required
 def get_server_status(slb, server_name):
     # TODO: check if multiple servers with same name and different ip.
-    server = find_server(slb, server_name)
+    c = acos_open_session(slb)
+    server = find_server(server_name, c)
+    c.session.close()
 
     return jsonify({"status": server["server"]["status"]})
 
@@ -132,10 +144,10 @@ def set_server_status(slb, server_name, new_status):
     if new_status not in [0, 1]:
         abort(404)
 
-    server = find_server(slb, server_name)
+    c = acos_open_session(slb)
+    server = find_server(server_name, c)
     server_host = server["server"]["host"]
 
-    c = acos_open_session(slb)
     set_status = c.slb.server.update(server_name, server_host, status=new_status)
     c.session.close()
 
