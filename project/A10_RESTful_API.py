@@ -1,6 +1,7 @@
 __author__ = 'atsvetkov'
 
 # TODO: show current command.
+# TODO: Authentication rules.
 
 import sys
 sys.path.append('./acos_client/')
