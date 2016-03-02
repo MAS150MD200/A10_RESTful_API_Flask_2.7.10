@@ -88,16 +88,26 @@ def get_service_groups(slb):
     return jsonify(parse_all_service_groups(all_service_groups))
 
 
-@app.route('/a10-slb/api/v1.0/<slb>/service-groups/<service_group_name>', methods=['GET'])
+@app.route('/a10-slb/api/v1.0/<slb>/service-groups/<service_group_name>/<result_format>', methods=['GET'])
 # @auth.login_required
-def get_service_group_member(slb, service_group_name):
+def get_service_group_member(slb, service_group_name, result_format):
+
+    if result_format not in ["summary", "detailed"]:
+        abort(404)
+
     c = acos_open_session(slb)
     all_service_groups = c.slb.service_group.all()
 
-    srv_grp = parse_all_service_groups(all_service_groups, service_group_name, c)
+    if result_format == "detailed":
+        srv_grp = parse_all_service_groups(all_service_groups, service_group_name, c)
+    elif result_format == "summary":
+        all_service_groups = all_service_groups["service_group_list"]
+        srv_grp = [grp for grp in all_service_groups if grp["name"] == service_group_name][0]
+
     c.session.close()
 
     return jsonify(srv_grp)
+
 
 
 @app.route('/a10-slb/api/v1.0/<slb>/service-groups/<service_group_name>/<server_name>:<server_port>', methods=['DELETE'])
