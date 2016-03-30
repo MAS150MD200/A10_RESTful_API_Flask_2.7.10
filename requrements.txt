@@ -1,0 +1,10 @@
+Flask
+Flask-HTTPAuth
+Jinja2
+MarkupSafe
+Werkzeug
+hash-ring
+itsdangerous
+pip
+requests
+setuptools
