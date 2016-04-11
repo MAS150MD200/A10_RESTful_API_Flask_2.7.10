@@ -28,7 +28,7 @@ app = Flask(__name__)
 @auth.get_password
 def get_password(username):
     if username == 'user':
-        return 'pass'
+        return '8ecLEjuid7JXnn1F'
     return None
 
 
