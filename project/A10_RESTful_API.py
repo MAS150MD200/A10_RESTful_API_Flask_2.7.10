@@ -6,6 +6,9 @@ __author__ = 'atsvetkov'
 # TODO: Backup SLB config to TFTP.
 # TODO: Message to HipChat.
 # TODO: Alert if we try to remove more than half servers from cluster.
+# TODO: check session id to verify connection.
+# TODO: check if we use non exist server name (use find server?).
+
 
 import sys
 sys.path.append('./acos_client/')
@@ -167,6 +170,19 @@ def set_server_status(slb, server_name, new_status):
     c.session.close()
 
     return c.http.response_data
+
+
+@app.route('/a10-slb/api/v1.0/<slb>/server/<server_name>/stats', methods=['GET'])
+def get_server_stats(slb, server_name):
+
+    c = acos_open_session(slb)
+    # server = find_server(server_name, c)
+    # server_host = server["server"]["host"]
+    server_stats = c.slb.server.stats(server_name)
+    c.session.close()
+
+    return jsonify({"stats": server_stats})
+
 
 
 if __name__ == '__main__':

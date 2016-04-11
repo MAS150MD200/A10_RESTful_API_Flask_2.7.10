@@ -56,7 +56,8 @@ class Server(base.BaseV21):
 
     def stats(self, name, **kwargs):
         return self._post("slb.server.fetchStatistics",
-                          {"server": {"name": name}}, **kwargs)
+                          {"name": name}, **kwargs)  # MOE.
+                          # {"server": {"name": name}}, **kwargs)
 
     def all_stats(self, **kwargs):
         return self._get('fetchAllStatistics', **kwargs)
